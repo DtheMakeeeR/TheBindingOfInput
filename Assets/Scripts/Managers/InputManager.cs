@@ -34,6 +34,7 @@ public class InputManager : MonoBehaviour
             PlayerActionMap.FindAction("Move").canceled += OnMove;
             PlayerActionMap.FindAction("Jump").performed += OnJumpPerformed;
             PlayerActionMap.FindAction("Crouch").performed += OnCrouchPerformed;
+            PlayerActionMap.FindAction("Attack").performed += OnAttackPerformed;
             PlayerActionMap.FindAction("Run").performed += OnRunPerformed;
             PlayerActionMap.FindAction("Run").canceled += OnRunCanceled;
         }
@@ -41,6 +42,11 @@ public class InputManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private void OnAttackPerformed(InputAction.CallbackContext context)
+    {
+        playerController.SetIsAttacking(true);
     }
 
     private void OnCrouchPerformed(InputAction.CallbackContext context)

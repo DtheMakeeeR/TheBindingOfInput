@@ -1,6 +1,8 @@
 using System;
-using UnityEngine;
 using System.Linq;
+using UnityEditor.Tilemaps;
+using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class PlayerController : MonoBehaviour
 {
@@ -17,10 +19,19 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float jumpPower = 5f;
     [SerializeField] LayerMask groundedMask;
 
+    [Header("Молот")]
+    [SerializeField] float radius = 1f;
+    [SerializeField] float coolDown = 1f;
+    [SerializeField] Tilemap destructibleTilemap;
+    [SerializeField] TilemapCollider2D tilemapCollider;
+    [SerializeField] CompositeCollider2D compositeCollider;
+
     bool isGrounded = false;
     bool isRunning = false;
     bool isJumping = false;
     bool isCrouching = false;
+    bool isAttacking = false;
+    bool canAttack = true;
     bool canMove = true;
     Vector2 moveInput = Vector2.zero;
     Vector2 moveDirection = Vector2.zero;
@@ -46,8 +57,37 @@ public class PlayerController : MonoBehaviour
         {
             Crouch();
         }
+        if(isAttacking)
+        {
+            HammerAttack();
+        }
         //ApplyGravity();
         Move();
+    }
+
+    private void HammerAttack()
+    {
+        isAttacking = false;
+        if (!canAttack) return;
+        Vector3Int centerCell = destructibleTilemap.WorldToCell(transform.position + Vector3.up);
+
+        int r = Mathf.CeilToInt(radius);
+        for (int x = -r; x <= r; x++)
+        {
+            for (int y = -r; y <= r; y++)
+            {
+                Vector3Int cell = centerCell + new Vector3Int(x, y, 0);
+                Vector3 cellWorldPos = destructibleTilemap.GetCellCenterWorld(cell);
+
+                if (Vector2.Distance(transform.position + Vector3.up, cellWorldPos) <= radius)
+                {
+                    destructibleTilemap.SetTile(cell, null);
+                }
+            }
+        }
+
+        tilemapCollider.ProcessTilemapChanges();
+        compositeCollider.GenerateGeometry();
     }
 
     private void Crouch()
@@ -130,4 +170,5 @@ public class PlayerController : MonoBehaviour
     }
 
     internal void SetIsCrouching(bool flag) => isCrouching = flag;
+    internal void SetIsAttacking(bool flag) => isAttacking = flag;
 }
