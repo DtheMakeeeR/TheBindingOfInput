@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEditor.Tilemaps;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using static UnityEngine.UI.Image;
 
 public class PlayerController : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Гравитация")]
     [SerializeField] float raycastLength = 0.05f;
+    [SerializeField] float footRadius = 0.2f; 
     [SerializeField] float gravityPower = 10f;
     [SerializeField] float jumpPower = 5f;
     [SerializeField] LayerMask groundedMask;
@@ -143,12 +145,13 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateIsGrounded()
     {
-        RaycastHit2D hit = Physics2D.Raycast(
-            transform.position,
-            Vector2.down,
-            raycastLength,
-            groundedMask
-        );
+        RaycastHit2D hit = Physics2D.CircleCast(
+        transform.position,
+        footRadius,
+        Vector2.down,
+        raycastLength,
+        groundedMask
+    );
 
         isGrounded = hit.collider != null;
     }
