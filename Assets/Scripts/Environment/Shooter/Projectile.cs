@@ -33,8 +33,8 @@ public class Projectile : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             collision.gameObject.GetComponentInParent<PlayerController>().Respawn();
+            gameObject.SetActive(false);
         }
-        gameObject.SetActive(false);
     }
     public void SetSpeed(float _speed)
     {

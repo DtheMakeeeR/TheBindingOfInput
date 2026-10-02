@@ -1,6 +1,6 @@
 using System;
+using System.Collections;
 using System.Linq;
-using UnityEditor.Tilemaps;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static UnityEngine.UI.Image;
@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     [Header("Ссылки")]
     [SerializeField] Rigidbody2D rb;
     [SerializeField] Collider2D playerCollider;
+    [SerializeField] AudioSource respawnAS;
     [Header("Передвижения")]
     [SerializeField] float walkSpeed = 3f;
     [SerializeField] float runSpeed = 5f;
@@ -48,6 +49,7 @@ public class PlayerController : MonoBehaviour
         UpdateIsGrounded();
         if (!canMove) 
         {
+            Debug.Log("CANT MOVE");
             rb.linearVelocity = rb.linearVelocity.With(x: 0);
             return;
         }
@@ -69,8 +71,36 @@ public class PlayerController : MonoBehaviour
 
     private void HammerAttack()
     {
-        isAttacking = false;
         if (!canAttack) return;
+        isAttacking = false;
+        StartCoroutine(_ReloadCoroutine());
+        BreakTileMap();
+        DamageMobsInRadius();
+    }
+
+    private void DamageMobsInRadius()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+        transform.position,
+        radius
+    );
+
+        foreach (var hit in hits)
+        {
+            if (hit.TryGetComponent<Mob>(out var mob))
+            {
+                Destroy(mob.gameObject);
+            }
+        }
+    }
+
+    IEnumerator _ReloadCoroutine()
+    {
+        yield return new WaitForSeconds(coolDown);
+        canAttack = true;
+    }
+    private void BreakTileMap()
+    {
         Vector3Int centerCell = destructibleTilemap.WorldToCell(transform.position + Vector3.up);
 
         int r = Mathf.CeilToInt(radius);
@@ -137,10 +167,12 @@ public class PlayerController : MonoBehaviour
 
     private void Move()
     {
+        Debug.Log($"MOVE: {moveInput} {isRunning}");
         float speed = isRunning ? runSpeed : walkSpeed;
         
         Vector2 velocity = rb.linearVelocity.With(x: moveInput.x * speed);
         rb.linearVelocity = velocity;
+        Debug.Log($"VELOCITY: {rb.linearVelocity} {rb.linearVelocity}");
     }
 
     private void UpdateIsGrounded()
@@ -169,7 +201,9 @@ public class PlayerController : MonoBehaviour
 
     internal void Respawn()
     {
+        MessageManager.Instance.ShowRandomDeathPhrase();
         transform.position = CheckpointsManager.Instance.RespawnTransform.position;
+        respawnAS.Play();
     }
 
     internal void SetIsCrouching(bool flag) => isCrouching = flag;

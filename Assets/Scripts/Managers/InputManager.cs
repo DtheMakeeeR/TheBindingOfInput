@@ -18,7 +18,6 @@ public class InputManager : MonoBehaviour
 
     public InputActionMap PlayerActionMap;
     Vector2 moveInput = Vector2.zero;
-
     private void Awake()
     {
         if (Instance == null)
@@ -27,9 +26,9 @@ public class InputManager : MonoBehaviour
             CaptureAction = new InputAction(binding: "<Keyboard>/*");
             CaptureAction.Enable();
             //CaptureAction.performed += OnCapture;
-            DontDestroyOnLoad(gameObject);
             PlayerActionMap = InputSystem.actions.FindActionMap("Player");
             PlayerActionMap.Enable();
+            ClearAllBindings(PlayerActionMap);
             PlayerActionMap.FindAction("Move").performed += OnMove;
             PlayerActionMap.FindAction("Move").canceled += OnMove;
             PlayerActionMap.FindAction("Jump").performed += OnJumpPerformed;
@@ -43,7 +42,22 @@ public class InputManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    private void ClearAllBindings(InputActionMap map)
+    {
+        foreach (var action in map.actions)
+        {
+            for (int i = 0; i < action.bindings.Count; i++)
+            {
+                var binding = action.bindings[i];
 
+                // Пропускаем заголовок композита — его путь трогать нельзя
+                if (binding.isComposite) continue;
+
+                // Обнуляем путь (и для обычных, и для частей композита)
+                action.ApplyBindingOverride(i, "");
+            }
+        }
+    }
     private void OnAttackPerformed(InputAction.CallbackContext context)
     {
         playerController.SetIsAttacking(true);
@@ -67,6 +81,7 @@ public class InputManager : MonoBehaviour
 
     private void OnJumpPerformed(InputAction.CallbackContext context)
     {
+        Debug.Log("JUMP PERFORMED");
         playerController.SetIsJumping(true);
     }
 
@@ -83,11 +98,12 @@ public class InputManager : MonoBehaviour
     }
     public void OnMove(InputAction.CallbackContext context)
     {
+        Debug.Log("MOVE INPUT: " + context.ReadValue<Vector2>());
         moveInput = context.ReadValue<Vector2>();        
     }
 
     private void Update()
     {
-        playerController.SetMoveInput(moveInput);
+        playerController?.SetMoveInput(moveInput);
     }
 }

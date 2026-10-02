@@ -13,6 +13,7 @@ public class Shooter : MonoBehaviour
     [SerializeField] Projectile projectilePrefab;
     [SerializeField] float projectileSpeed;
     [SerializeField] int poolSize = 10;
+    [SerializeField] AudioSource shotAS;
     private Vector3 poolPos = new Vector3(-1000, -1000, 0);
     Projectile[] projectilePool;
 
@@ -46,6 +47,7 @@ public class Shooter : MonoBehaviour
     {
         Projectile nextProjectile = GetNextProjectile();
         if (nextProjectile == null) return;
+        shotAS.Play();
         nextProjectile.transform.position = transform.position + firePosition;
         nextProjectile.gameObject.SetActive(true);
         nextProjectile.Launch(fireDirection, maxDistance);
